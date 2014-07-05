@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>
+        .warning{
+            color:red;
+
+        }
+    </style>
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+</head>
+<body>
+   <form id="accountCreationForm">
+       <table>
+           <tr>
+               <td>ID</td>
+               <td>
+                   <input type="text" id="id" name="id"/>
+               </td>
+           </tr>
+           <tr>
+               <td>Name</td>
+               <td>
+                   <input type="text" id="name" name="name"/>
+               </td>
+           </tr>
+           <tr>
+               <td>Type</td>
+               <td>
+                   <select name="type" id="type">
+                       <option value="asset">Asset</option>
+                       <option value="liability">Liability</option>
+                       <option value="income">Income</option>
+                       <option value="expense">Expense</option>
+                       <option value="equity">Equity</option>
+                   </select>
+               </td>
+           </tr>
+           <tr>
+               <td></td>
+               <td>
+                   <input id="addBtn" type="submit" value="Add"/>
+               </td>
+           </tr>
+       </table>
+   </form>
+</body>
+
+
+<script>
+    function fetchAccounts(url){
+        $.ajax({
+            url:url,
+            type:'GET'
+        }).done(function(data){
+                    appendAccounts(data);
+
+
+
+
+                }).fail(function(res){
+                    alert(res);
+
+                });
+
+
+    }
+    function appendAccounts(accounts){
+        var parent=$('body');
+
+        if(!hasAccounts()){
+            var len=accounts.length;
+            var table=$('<table></table>');
+            $(parent).append(table);
+            var tbody=$('<tbody></tbody>');
+            $(tbody).appendTo(table);
+
+
+            for(var i=0;i<len;i++){
+                 $(tbody).append(accountRow(accounts[i]));
+
+            }
+
+            $(table).attr({id:'accounts'});
+
+          $(parent).append(table)
+
+        }
+    }
+    function accountRow(account){
+        var row=$('<tr></tr>');
+        var idCell=$('<td></td>',{text:account.id});
+        var nameCell=$('<td></td>',{text:account.name});
+        var balanceCell=$('<td></td>',{text:account.balance});
+        var typeCell=$('<td></td>',{text:account.type});
+        row.append(idCell);
+        row.append(nameCell);
+        row.append(balanceCell);
+        row.append(typeCell);
+        return row;
+
+
+    }
+    function removeAccounts(){
+        if(hasAccounts()){
+            $('body').find('#accounts').remove();
+
+        }
+    }
+    function hasAccounts(){
+        return $('body').has('#accounts').length!==0;
+
+    }
+
+    function refreshAccounts(url){
+        if(hasAccounts()){
+            removeAccounts();
+
+        }
+        fetchAccounts(url);
+
+    }
+
+
+    function postAccount(url,acc){
+        $.post("/accounts", acc).done(function () {
+                    alert("Thank you for registering!");
+                }).fail(function () {
+                    alert("Email already exists");
+                });
+    }
+
+
+    function checkTextInputs(form){
+        var result = true;
+        var inputs=$(form).find('input:text');
+        inputs.each(function(idx,input){
+           if($(input).val()===""){
+               var msg=input.name+" cannot be empty";
+               if(!hasWarning($(input).parent())){
+                   $(input).parent().append($('<span></span>',{'class':'warning',text:msg}));
+
+               }
+               result=false;
+
+           }else{
+               $(input).parent().find('.warning').remove();
+
+
+           }
+
+        });
+        return result;
+
+    }
+
+    function hasWarning(parent){
+        return $(parent).has('.warning').length!==0;
+
+
+    }
+
+
+    $(function(){
+        fetchAccounts('/accounts');
+        $('#accountCreationForm').submit(function(e){
+            e.preventDefault();
+
+
+            if(checkTextInputs('#accountCreationForm')){
+                postAccount('/accounts',$('#accountCreationForm').serialize());
+
+            }
+
+
+        })
+
+    });
+</script>
+
+
+
+
+</html>
